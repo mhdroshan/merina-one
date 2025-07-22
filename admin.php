@@ -34,9 +34,9 @@ if ($result->num_rows > 0) {
         :root {
             /* --- Primary Theme Color --- */
             --primary: #1f83b4;         /* Your main theme color */
-            --primary-blue-dark: rgb(4, 34, 63);;         /* Your main theme color */
+            --primary-blue-dark: rgb(4, 34, 63);         /* Your main theme color */
             --primary-rgb: 177, 44, 13; /* RGB version for opacity functions */
-            --primary-dark: #E2AA01;    /* A darker shade for hover/borders */
+            --primary-dark: rgb(4, 34, 63);    /* A darker shade for hover/borders */
             --primary-light:rgb(31 131 180);   /* A lighter shade (optional use) */
 
             /* --- Standard Semantic Colors (Using Bootstrap 5 defaults for contrast) --- */
@@ -77,6 +77,7 @@ if ($result->num_rows > 0) {
             width: 250px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             transition: all 0.3s;
+            z-index: 1;
         }
         
         .sidebar-header {
@@ -255,10 +256,75 @@ if ($result->num_rows > 0) {
             color: white!important;
             border-color: #dc3545;
         }
+        .floating-menu-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex; /* Changed to flex for centering icon */
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        z-index: 1100; /* Above sidebar */
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .floating-menu-btn:hover {
+        transform: scale(1.05);
+        background: var(--primary-dark);
+    }
+
+    .sidebar.hidden {
+        transform: translateX(-250px);
+    }
+
+    .main-content.expanded {
+        margin-left: 0;
+    }
+
+
+    /* Media queries for responsiveness */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-250px); /* Initially hidden on small screens */
+        }
+        .sidebar.show { /* Added a .show class to reveal the sidebar */
+            transform: translateX(0);
+            width: 137px;
+        }
+        .sidebar .logo-holder img{
+            width: 100px !important;
+        }
+        .main-content {
+            margin-left: 0; /* Main content always takes full width on small screens */
+            padding: 0px;
+            padding-top: 30px;
+        }
+        .floating-menu-btn {
+            display: flex; /* Show the button on small screens */
+        }
+        .main-content.short {
+            margin-left: 133px;
+        }
+    }
+
+    @media (min-width: 769px) {
+        .floating-menu-btn {
+            display: none; /* Hide the button on larger screens by default */
+        }
+    }
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="floating-menu-btn" id="menuToggle">
+        <span class="material-icons" id="menuIcon">menu</span>
+    </div>
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo-holder">
                 <img src="images/logo.png" alt="Logo" style="width: 200px; height: auto;">
@@ -280,7 +346,7 @@ if ($result->num_rows > 0) {
         </ul>
     </div>
 
-    <div class="main-content">
+    <div class="main-content" id="mainContent">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0">Contact Messages</h2>
@@ -462,6 +528,60 @@ if ($result->num_rows > 0) {
         }
     }
     </script>   
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menuIcon');
+            const mainContent = document.getElementById('mainContent');
+            
+
+            // Initial state for larger screens: sidebar visible, button hidden
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('hidden');
+                mainContent.classList.remove('expanded');
+                menuToggle.style.display = 'none'; // Hide button on large screens initially
+            } else {
+                // For smaller screens, sidebar starts hidden
+                sidebar.classList.add('hidden');
+                mainContent.classList.add('expanded');
+                menuIcon.textContent = 'menu'; // Ensure correct icon on load
+                menuToggle.style.display = 'flex'; // Show button on small screens
+            }
+
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('short');
+                mainContent.classList.toggle('expanded');
+                if (sidebar.classList.contains('show')) {
+                    menuIcon.textContent = 'close'; // Hamburger icon
+                    //  mainContent.classList.add('short');
+                } else {
+                    menuIcon.textContent = 'menu'; // Close icon
+                    // mainContent.classList.remove('short');
+                }
+            });
+
+            // Adjust sidebar and main content on window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('hidden');
+                    mainContent.classList.remove('expanded');
+                   
+                    menuToggle.style.display = 'none'; // Hide button on large screens
+                    menuIcon.textContent = 'menu'; // Reset icon when sidebar is forced open
+                } else {
+                    // If resizing to small screen, ensure sidebar is hidden and button shown
+                    sidebar.classList.add('hidden');
+                    
+                    mainContent.classList.add('expanded');
+                    menuToggle.style.display = 'flex'; // Show button on small screens
+                    menuIcon.textContent = 'menu'; // Ensure hamburger icon
+                }
+            });
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
