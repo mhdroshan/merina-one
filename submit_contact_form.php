@@ -16,22 +16,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and get form data
     $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-    $phone = filter_input(INPUT_POST, 'phone', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     $message = filter_input(INPUT_POST, 'message', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    
+    // --- START: MODIFICATION FOR COUNTRY CODE ---
+    $country_code = filter_input(INPUT_POST, 'country_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $phone_number = filter_input(INPUT_POST, 'phone', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    
+    // Combine the country code and phone number into a single string
+    $fullPhoneNumber = $country_code . ' ' . $phone_number;
+    // --- END: MODIFICATION FOR COUNTRY CODE ---
 
     // Basic validation
     if (empty($name)) {
         $response['message'] = 'Name is required.';
     } elseif (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $response['message'] = 'A valid email address is required.';
-    } elseif (empty($phone)) {
-        $response['message'] = 'Phone number is required.';
+    } elseif (empty($country_code) || empty($phone_number)) { // Updated validation to check both parts
+        $response['message'] = 'Country code and phone number are required.';
     } else {
         // Prepare SQL statement to prevent SQL injection
         $stmt = $conn->prepare("INSERT INTO contact (name, phone, email, message) VALUES (?, ?, ?, ?)");
 
         if ($stmt) {
-            $stmt->bind_param("ssss", $name, $phone, $email, $message);
+            // --- MODIFICATION: Bind the combined phone number ---
+            $stmt->bind_param("ssss", $name, $fullPhoneNumber, $email, $message);
 
             if ($stmt->execute()) {
                 $response['success'] = true;
